@@ -1,93 +1,189 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import joblib
 import plotly.express as px
-from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
 # ----------------------------
 # PAGE CONFIG
 # ----------------------------
-st.set_page_config(page_title="Auto ML Analytics Engine", layout="wide")
-
-st.title("🚀 Auto ML & Analytics Engine")
-st.markdown("Upload any dataset and get instant insights + ML predictions")
+st.set_page_config(
+    page_title="Ecommerce Intelligence Dashboard",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # ----------------------------
-# FILE UPLOAD
+# LOAD DATA
 # ----------------------------
-uploaded_file = st.file_uploader("📂 Upload CSV File", type=["csv"])
+model = joblib.load("models/customer_model.pkl")
+rfm = pd.read_csv("data/rfm_segmented.csv")
 
-if uploaded_file:
+# ----------------------------
+# SIDEBAR - PREDICTION TOOL
+# ----------------------------
+st.sidebar.title("🧠 Customer Prediction Tool")
 
-    df = pd.read_csv(uploaded_file)
+spent = st.sidebar.number_input("Total Spent", min_value=0.0)
+items = st.sidebar.number_input("Total Items", min_value=0)
+orders = st.sidebar.number_input("Total Orders", min_value=0)
 
-    st.subheader("📊 Dataset Preview")
-    st.dataframe(df.head())
+if st.sidebar.button("Predict Customer Type"):
+    input_data = np.array([[spent, items, orders]])
+    prediction = model.predict(input_data)
 
-    st.write("Shape:", df.shape)
+    if prediction[0] == 1:
+        st.sidebar.success("🔥 High Value Customer")
+    else:
+        st.sidebar.warning("⚠️ Regular Customer")
+st.sidebar.markdown("### 🧠 How prediction works")
+st.sidebar.write("""
+The model uses:
+- Total spending
+- Number of items purchased
+- Number of orders
 
-    # ----------------------------
-    # AUTO DATA CLEANING
-    # ----------------------------
-    df = df.dropna()
+It classifies customers into:
+High Value or Regular
+""")
 
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    categorical_cols = df.select_dtypes(include="object").columns.tolist()
+# ----------------------------
+# TITLE
+# ----------------------------
+st.title("🛒 Ecommerce Analytics & Customer Intelligence Dashboard")
 
-    st.subheader("🔍 Column Detection")
-    st.write("Numeric Columns:", numeric_cols)
-    st.write("Categorical Columns:", categorical_cols)
+st.markdown("Real-time insights from ecommerce transaction data")
+st.subheader("🔍 Customer Lookup")
 
-    # ----------------------------
-    # AUTO EDA CHARTS
-    # ----------------------------
-    st.subheader("📊 Auto Data Insights")
+customer_id = st.number_input("Enter Customer ID", min_value=0)
 
-    if len(numeric_cols) > 0:
-        col = numeric_cols[0]
-        fig = px.histogram(df, x=col, title=f"Distribution of {col}")
-        st.plotly_chart(fig, use_container_width=True)
+if st.button("Search Customer"):
+    result = rfm[rfm["CustomerID"] == customer_id]
 
-    if len(numeric_cols) >= 2:
-        fig2 = px.scatter(df, x=numeric_cols[0], y=numeric_cols[1], title="Feature Relationship")
-        st.plotly_chart(fig2, use_container_width=True)
+    if not result.empty:
+        st.write(result)
+    else:
+        st.warning("Customer not found")
+st.subheader("🎯 Filter Customers by Segment")
 
-    # ----------------------------
-    # OPTIONAL ML SECTION
-    # ----------------------------
-    st.subheader("🤖 Auto Machine Learning (Optional)")
+segment_choice = st.selectbox(
+    "Select Segment",
+    rfm["Segment"].unique()
+)
 
-    target = st.selectbox("Select Target Column (for prediction)", df.columns)
+filtered = rfm[rfm["Segment"] == segment_choice]
+st.dataframe(filtered)
+st.subheader("📥 Download Customer Data")
 
-    if st.button("Run Auto ML Model"):
+csv = rfm.to_csv(index=False)
 
-        data = df.copy()
+st.download_button(
+    label="Download Full Dataset",
+    data=csv,
+    file_name="customer_data.csv",
+    mime="text/csv"
+)
+st.subheader("💡 Business Insights")
 
-        # encode categorical
-        for col in categorical_cols:
-            le = LabelEncoder()
-            data[col] = le.fit_transform(data[col].astype(str))
+vip = rfm[rfm["Segment"] == "VIP"]
+at_risk = rfm[rfm["Segment"] == "At Risk"]
 
-        X = data.drop(columns=[target])
-        y = data[target]
+st.info(f"VIP Customers: {len(vip)}")
+st.warning(f"At Risk Customers: {len(at_risk)}")
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+st.success("Focus marketing on VIP retention + At-risk reactivation")
 
-        model = RandomForestClassifier()
-        model.fit(X_train, y_train)
+# ----------------------------
+# KPI CARDS
+# ----------------------------
+col1, col2, col3, col4 = st.columns(4)
 
-        accuracy = model.score(X_test, y_test)
+col1.metric("👥 Total Customers", len(rfm))
+col2.metric("💰 Total Revenue", f"${rfm['Monetary'].sum():,.0f}")
+col3.metric("📦 Avg Spend", f"${rfm['Monetary'].mean():,.2f}")
+col4.metric("🔁 Avg Orders", f"{rfm['Frequency'].mean():.1f}")
 
-        st.success(f"Model Accuracy: {accuracy:.2f}")
+st.divider()
 
-        st.write("Feature Importance:")
+# ----------------------------
+# CUSTOMER SEGMENTS CHART
+# ----------------------------
+st.subheader("📊 Customer Segments Overview")
 
-        importance = pd.DataFrame({
-            "Feature": X.columns,
-            "Importance": model.feature_importances_
-        }).sort_values(by="Importance", ascending=False)
+segment_counts = rfm["Segment"].value_counts().reset_index()
+segment_counts.columns = ["Segment", "Count"]
 
-        fig3 = px.bar(importance, x="Feature", y="Importance", title="Feature Importance")
-        st.plotly_chart(fig3, use_container_width=True)
+fig1 = px.bar(
+    segment_counts,
+    x="Segment",
+    y="Count",
+    title="Customer Segment Distribution"
+)
+st.subheader("📊 Segment Share")
+
+fig = px.pie(
+    rfm,
+    names="Segment",
+    title="Customer Segment Distribution"
+)
+
+st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig1, use_container_width=True)
+
+# ----------------------------
+# REVENUE DISTRIBUTION
+# ----------------------------
+st.subheader("💰 Revenue Distribution")
+
+fig2 = px.histogram(
+    rfm,
+    x="Monetary",
+    nbins=30,
+    title="Customer Spending Distribution"
+)
+
+st.plotly_chart(fig2, use_container_width=True)
+
+# ----------------------------
+# TOP CUSTOMERS
+# ----------------------------
+st.subheader("🏆 Top Customers")
+
+top_customers = rfm.sort_values("Monetary", ascending=False).head(10)
+
+fig3 = px.bar(
+    top_customers,
+    x="CustomerID",
+    y="Monetary",
+    title="Top 10 Customers by Revenue"
+)
+
+st.plotly_chart(fig3, use_container_width=True)
+
+# ----------------------------
+# RFM RELATIONSHIP VIEW
+# ----------------------------
+st.subheader("📈 Customer Behavior Map (RFM Analysis)")
+
+fig4 = px.scatter(
+    rfm,
+    x="Frequency",
+    y="Monetary",
+    color="Segment",
+    size="Monetary",
+    title="RFM Customer Segmentation"
+)
+
+st.plotly_chart(fig4, use_container_width=True)
+
+# ----------------------------
+# DATA TABLES
+# ----------------------------
+st.subheader("⚠️ At Risk Customers")
+
+at_risk = rfm[rfm["Segment"] == "At Risk"]
+st.dataframe(at_risk.head(10))
+
+st.subheader("📋 Full Dataset Preview")
+
+st.dataframe(rfm.head(20))
