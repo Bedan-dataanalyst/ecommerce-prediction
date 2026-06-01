@@ -1,18 +1,8 @@
-\# 🛒 Ecommerce Customer Intelligence \& Prediction System
+\# 🛒 **Ecommerce Customer Intelligence \& Prediction System**
 
 
 
-A complete end-to-end \*\*machine learning + data analytics + web app project\*\* that analyzes ecommerce transactions, segments customers using RFM analysis, and predicts customer value using machine learning.
-
-
-
-\---
-
-
-
-\# 🚀 Live Demo
-
-👉 https://your-streamlit-app-link.streamlit.app
+A complete end-to-end \*\***machine learning + data analytics + web app project**\*\* that analyzes ecommerce transactions, segments customers using RFM analysis, and predicts customer value using machine learning.
 
 
 
@@ -20,7 +10,17 @@ A complete end-to-end \*\*machine learning + data analytics + web app project\*\
 
 
 
-\# 📊 Project Overview
+\# 🚀 **Live Demo**
+
+👉 https://ecommerce-prediction-2026.streamlit.app/
+
+
+
+\---
+
+
+
+\# 📊 **Project Overview**
 
 
 
@@ -162,7 +162,9 @@ Built with Streamlit + Plotly:
 
 
 
-\# 📁 Project Structure
+\# 📁 **Project Structure**
+
+
 
 ecommerce-prediction/
 
@@ -226,7 +228,7 @@ ecommerce-prediction/
 
 
 
-\# 📊 Visual Insights
+\# 📊 **Visual Insights**
 
 
 
@@ -248,31 +250,9 @@ The dashboard provides:
 
 
 
-\# ⚙️ Installation \& Setup
+**🚀 Future Improvements**
 
 
-
-```bash
-
-git clone https://github.com/your-username/ecommerce-prediction.git
-
-cd ecommerce-prediction
-
-
-
-python -m venv venv
-
-venv\\Scripts\\activate
-
-
-
-pip install -r requirements.txt
-
-
-
-python -m streamlit run dashboard/app.py
-
-🚀 Future Improvements
 
 Customer churn prediction model
 
@@ -282,7 +262,9 @@ Real-time data integration
 
 Email marketing automation
 
-👨‍💻 Author
+
+
+👨‍💻 **Author**
 
 
 
@@ -290,7 +272,7 @@ Built by a Data Analyst / BI Developer portfolio project.
 
 
 
-📌 Note
+📌 **Note**
 
 
 

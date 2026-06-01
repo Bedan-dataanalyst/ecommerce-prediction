@@ -36,6 +36,16 @@ if st.sidebar.button("Predict Customer Type"):
         st.sidebar.success("🔥 High Value Customer")
     else:
         st.sidebar.warning("⚠️ Regular Customer")
+st.sidebar.markdown("### 🧠 How prediction works")
+st.sidebar.write("""
+The model uses:
+- Total spending
+- Number of items purchased
+- Number of orders
+
+It classifies customers into:
+High Value or Regular
+""")
 
 # ----------------------------
 # TITLE
@@ -43,6 +53,45 @@ if st.sidebar.button("Predict Customer Type"):
 st.title("🛒 Ecommerce Analytics & Customer Intelligence Dashboard")
 
 st.markdown("Real-time insights from ecommerce transaction data")
+st.subheader("🔍 Customer Lookup")
+
+customer_id = st.number_input("Enter Customer ID", min_value=0)
+
+if st.button("Search Customer"):
+    result = rfm[rfm["CustomerID"] == customer_id]
+
+    if not result.empty:
+        st.write(result)
+    else:
+        st.warning("Customer not found")
+st.subheader("🎯 Filter Customers by Segment")
+
+segment_choice = st.selectbox(
+    "Select Segment",
+    rfm["Segment"].unique()
+)
+
+filtered = rfm[rfm["Segment"] == segment_choice]
+st.dataframe(filtered)
+st.subheader("📥 Download Customer Data")
+
+csv = rfm.to_csv(index=False)
+
+st.download_button(
+    label="Download Full Dataset",
+    data=csv,
+    file_name="customer_data.csv",
+    mime="text/csv"
+)
+st.subheader("💡 Business Insights")
+
+vip = rfm[rfm["Segment"] == "VIP"]
+at_risk = rfm[rfm["Segment"] == "At Risk"]
+
+st.info(f"VIP Customers: {len(vip)}")
+st.warning(f"At Risk Customers: {len(at_risk)}")
+
+st.success("Focus marketing on VIP retention + At-risk reactivation")
 
 # ----------------------------
 # KPI CARDS
@@ -70,7 +119,15 @@ fig1 = px.bar(
     y="Count",
     title="Customer Segment Distribution"
 )
+st.subheader("📊 Segment Share")
 
+fig = px.pie(
+    rfm,
+    names="Segment",
+    title="Customer Segment Distribution"
+)
+
+st.plotly_chart(fig, use_container_width=True)
 st.plotly_chart(fig1, use_container_width=True)
 
 # ----------------------------
